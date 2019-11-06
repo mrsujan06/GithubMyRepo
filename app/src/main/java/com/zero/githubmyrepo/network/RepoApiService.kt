@@ -4,10 +4,8 @@ import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterF
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.zero.githubmyrepo.model.ReposResponse
-import io.reactivex.Observable
 import kotlinx.coroutines.Deferred
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.GET
 
@@ -20,7 +18,7 @@ private val moshi: Moshi = Moshi.Builder()
 
 private val retrofit = Retrofit.Builder()
     .addConverterFactory(MoshiConverterFactory.create(moshi))
-    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+    .addCallAdapterFactory(CoroutineCallAdapterFactory())
     .baseUrl(BASE_URL)
     .build()
 
@@ -33,5 +31,5 @@ object RepoApi {
 interface RepoApiService {
 
     @GET(END_POINT)
-     fun getRepos(): Observable<List<ReposResponse>>
+    fun getRepos(): Deferred<List<ReposResponse>>
 }

@@ -23,7 +23,7 @@ class MyRepoActivity : AppCompatActivity() {
         repoViewModel.getData()
 
         initRecyclerView()
-        repoViewModel.getRepos().observe(this, Observer { repos ->
+        repoViewModel.repoObservable.observe(this, Observer { repos ->
             repoAdapter.setData(repos)
         })
     }

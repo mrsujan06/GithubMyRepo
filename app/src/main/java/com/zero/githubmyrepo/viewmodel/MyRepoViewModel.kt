@@ -1,37 +1,41 @@
 package com.zero.githubmyrepo.viewmodel
 
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.zero.githubmyrepo.model.ReposResponse
 import com.zero.githubmyrepo.network.RepoApi
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.*
 
 class MyRepoViewModel : ViewModel() {
-    private val TAG = "MESSAGE"
-    private val repoObservable: MutableLiveData<List<ReposResponse>> = MutableLiveData()
-    private val compositeDisposable = CompositeDisposable()
+
+    private var _repoObservable: MutableLiveData<List<ReposResponse>> = MutableLiveData()
+    val repoObservable: LiveData<List<ReposResponse>>
+        get() = _repoObservable
+
+    private val viewModelJob = Job()
+    private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
 
     fun getData() {
-        compositeDisposable.add(
-            RepoApi.retrofitService.getRepos()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ repos ->
-                    repoObservable.value = repos
-                }, {
-                    Log.i(TAG, it.message)
-                })
-        )
-    }
+        coroutineScope.launch {
+            val getReposDeffered = RepoApi
+                .retrofitService
+                .getRepos()
+            try {
+                val repoList = getReposDeffered
+                    .await()
+                _repoObservable.value = repoList
+            } catch (e: Exception) {
+                Log.i("MyRepoViewModel", e.message)
+            }
 
-    fun getRepos() = repoObservable
+        }
+    }
 
     override fun onCleared() {
         super.onCleared()
-        compositeDisposable.clear()
+        viewModelJob.cancel()
     }
 
 }
